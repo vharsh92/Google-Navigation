@@ -14,6 +14,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
+import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -49,6 +50,7 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,6 +74,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Marker markerSource, markerDrop;
     private Button btnGetRoutes;
     private List<Polyline> polylineList = new ArrayList<>();
+    ArrayList<String> directions = new ArrayList<>();
 
 
     @Override
@@ -157,6 +160,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onResponse(Call<DirectionResult> call, Response<DirectionResult> response) {
                 DirectionResult directionResults = (DirectionResult) response.body();
                 Log.i("TTT", response.body() + "");
+                String[] drc;
                 ArrayList<LatLng> routelist = new ArrayList<LatLng>();
                 if (directionResults.getRoutes().size() > 0) {
                     ArrayList<LatLng> decodelist;
@@ -168,6 +172,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             Steps step;
                             com.example.googlenavigation.model.Location location;
                             String polyline;
+                            drc = new String[steps.size()];
                             for (int i = 0; i < steps.size(); i++) {
                                 step = steps.get(i);
                                 location = step.getStart_location();
@@ -176,43 +181,46 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 decodelist = DirectionsJSONParser.decodePoly(polyline);
                                 routelist.addAll(decodelist);
                                 location = step.getEnd_location();
+                                drc[i] = Html.fromHtml(step.getHtml_instructions()).toString();
                                 routelist.add(new LatLng(location.getLat(), location.getLng()));
-                                if(j%2==0){
-                                    PolylineOptions rectLine = new PolylineOptions().width(10).color(
-                                            Color.GRAY);
 
-                                    for (int k = 0; k < routelist.size(); k++) {
-                                        rectLine.add(routelist.get(k));
-                                    }
-                                    pline = mMap.addPolyline(rectLine);
-                                    pline.setClickable(true);
-                                    polylineList.add(pline);
-                                    routelist.clear();
-                                }else if(j%3==0){
-                                    PolylineOptions rectLine = new PolylineOptions().width(10).color(
-                                            Color.YELLOW);
-
-                                    for (int k = 0; k < routelist.size(); k++) {
-                                        rectLine.add(routelist.get(k));
-                                    }
-                                    pline = mMap.addPolyline(rectLine);
-                                    pline.setClickable(true);
-                                    polylineList.add(pline);
-                                    routelist.clear();
-                                }else {
-                                    PolylineOptions rectLine = new PolylineOptions().width(10).color(
-                                            Color.RED);
-
-                                    for (int k = 0; k < routelist.size(); k++) {
-                                        rectLine.add(routelist.get(k));
-                                    }
-                                    pline = mMap.addPolyline(rectLine);
-                                    pline.setClickable(true);
-                                    polylineList.add(pline);
-                                    routelist.clear();
-                                }
 
                             }
+                            if(j%2==0){
+                                PolylineOptions rectLine = new PolylineOptions().width(10).color(
+                                        Color.GRAY);
+
+                                for (int k = 0; k < routelist.size(); k++) {
+                                    rectLine.add(routelist.get(k));
+                                }
+                                pline = mMap.addPolyline(rectLine);
+                                pline.setClickable(true);
+                                polylineList.add(pline);
+                                routelist.clear();
+                            }else if(j%3==0){
+                                PolylineOptions rectLine = new PolylineOptions().width(10).color(
+                                        Color.YELLOW);
+
+                                for (int k = 0; k < routelist.size(); k++) {
+                                    rectLine.add(routelist.get(k));
+                                }
+                                pline = mMap.addPolyline(rectLine);
+                                pline.setClickable(true);
+                                polylineList.add(pline);
+                                routelist.clear();
+                            }else {
+                                PolylineOptions rectLine = new PolylineOptions().width(10).color(
+                                        Color.RED);
+
+                                for (int k = 0; k < routelist.size(); k++) {
+                                    rectLine.add(routelist.get(k));
+                                }
+                                pline = mMap.addPolyline(rectLine);
+                                pline.setClickable(true);
+                                polylineList.add(pline);
+                                routelist.clear();
+                            }
+                            directions.add(Arrays.toString(drc));
                         }
                     }
                 }
@@ -220,6 +228,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
                     @Override
                     public void onPolylineClick(Polyline polyline) {
+                        for(int i=0;i<polylineList.size();i++){
+                            String id = polylineList.get(i).getId();
+                            if(polyline.getId().equals(polylineList.get(i).getId())){
+                                Toast.makeText(getApplicationContext(),directions.get(i),Toast.LENGTH_LONG).show();
+                                break;
+                            }
+                        }
 
                     }
                 });
